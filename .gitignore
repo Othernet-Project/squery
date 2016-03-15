@@ -1,0 +1,5 @@
+*.py[cod]
+*.sw[op]
+/build
+/dist
+/squery.egg-info
