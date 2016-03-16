@@ -86,22 +86,23 @@ class Backend(object):
         self._pool.closeall()
 
     @classmethod
-    def create_pool(cls, host, port, database):
+    def create_pool(cls, host, port, database, path):
         return cls.ConnectionPool(host=host,
                                   port=port,
-                                  database=database)
+                                  database=database,
+                                  path=path)
 
     @classmethod
-    def command(cls, host, port, database):
-        pool = cls.create_pool(host, port, database)
+    def command(cls, host, port, database, path):
+        pool = cls.create_pool(host, port, database, path)
 
     @classmethod
-    def create(cls, host, port, database):
-        cls.command(host, port, database)
+    def create(cls, host, port, database, path):
+        cls.command(host, port, database, path)
 
     @classmethod
-    def drop(cls, host, port, database):
-        cls.command(host, port, database)
+    def drop(cls, host, port, database, path):
+        cls.command(host, port, database, path)
 
     def recreate(self):
         self.close()

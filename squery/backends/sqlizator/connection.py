@@ -60,9 +60,10 @@ class Connection(object):
     # server reply status codes
     OK = 0
     UNKNOWN_ERROR = 1
-    DESERIALIZATION_ERROR = 2
-    BAD_MESSAGE = 3
-    DATABASE_NOT_FOUND = 4
+    INVALID_REQUEST = 2
+    DESERIALIZATION_ERROR = 3
+    DATABASE_OPENING_ERROR = 4
+    DATABASE_NOT_FOUND = 5
     INVALID_QUERY = 5
     # in case an error message is not found in the reply
     DEFAULT_MESSAGE = 'Unknown error.'
@@ -73,13 +74,16 @@ class Connection(object):
     _to_primitive_converters = {}
     _from_primitive_converters = {}
 
-    def __init__(self, host, port, database):
+    def __init__(self, host, port, database, path):
         self._dbname = database
+        self._dbpath = path
         try:
             self._socket = self.socket_cls(host, port)
         except (socket.error, socket.timeout):
             self._socket = None
             raise
+        else:
+            self._connect_to_database()
 
     @classmethod
     def to_primitive(cls, obj):
@@ -155,13 +159,21 @@ class Connection(object):
 
         return self._construct_row(data)
 
+    def _connect_to_database(self):
+        data = {'endpoint': 'connect',
+                'database': self._dbname,
+                'path': self._dbpath}
+        self._send(data)
+        return list(self._recv())
+
     def _command(self, operation, sql, *parameters):
         try:
             (params,) = parameters
         except ValueError:
             params = ()
 
-        data = {'operation': operation,
+        data = {'endpoint': 'query',
+                'operation': operation,
                 'database': self._dbname,
                 'query': sql,
                 'parameters': params}
