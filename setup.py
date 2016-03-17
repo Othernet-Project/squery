@@ -16,7 +16,7 @@ def read(fname):
 setup(
     name=NAME,
     version=VERSION,
-    license='BSD',
+    license='GPLv3',
     packages=[NAME],
     include_package_data=True,
     long_description=read('README.rst'),
