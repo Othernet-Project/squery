@@ -92,20 +92,8 @@ class Backend(object):
                                   database=database,
                                   path=path)
 
-    @classmethod
-    def command(cls, host, port, database, path):
-        pool = cls.create_pool(host, port, database, path)
-
-    @classmethod
-    def create(cls, host, port, database, path):
-        cls.command(host, port, database, path)
-
-    @classmethod
-    def drop(cls, host, port, database, path):
-        cls.command(host, port, database, path)
-
     def recreate(self):
+        with self._pool.connection() as conn:
+            conn.drop_database()
         self.close()
-        self.drop(**self._conn_params)
-        self.create(**self._conn_params)
-
+        self._pool = self.create_pool(**self._conn_params)
