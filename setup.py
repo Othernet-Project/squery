@@ -28,8 +28,9 @@ setup(
         'Topic :: Software Development :: Libraries',
     ],
     install_requires=[
-        'psycopg2',
         'gevent',
+        'psycopg2',
+        'pyqlizator',
         'sqlize',
     ],
 )

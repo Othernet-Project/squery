@@ -16,7 +16,7 @@ from sqlize import (From, Where, Group, Order, Limit, Select, Update, Delete,
                     Insert, Replace, sqlin, sqlarray)
 from pytz import utc
 
-from .connection import Connection, ConnectionPool
+from .pool import Connection, ConnectionPool
 
 
 def from_utc_timestamp(timestamp):
