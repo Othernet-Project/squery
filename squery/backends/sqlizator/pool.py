@@ -61,11 +61,3 @@ class ConnectionPool(object):
         finally:
             if conn is not None and not conn.closed:
                 self.put(conn)
-
-    def execute(self, sql, *parameters):
-        with self.connection() as conn:
-            return list(conn.execute(sql, *parameters))
-
-    def fetch(self, sql, *parameters):
-        with self.connection() as conn:
-            return conn.fetch(sql, *parameters)
