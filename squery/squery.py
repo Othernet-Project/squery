@@ -53,7 +53,7 @@ class Database(object):
                 return func(self, *args, **kwargs)
             except Exception as exc:
                 for fn in self._error_handlers:
-                    fn(exc)
+                    fn(self, exc)
                 raise
         return wrapper
 
