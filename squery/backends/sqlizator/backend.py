@@ -16,8 +16,9 @@ import logging
 from sqlize import (From, Where, Group, Order, Limit, Select, Update, Delete,
                     Insert, Replace, sqlin, sqlarray)
 from pytz import utc
+from pyqlizator import Connection
 
-from .pool import Connection, ConnectionPool
+from .pool import ConnectionPool
 
 
 def from_utc_timestamp(timestamp):
@@ -101,7 +102,8 @@ class Backend(object):
 
     @classmethod
     def create_pool(cls, host, port, database, path):
-        return cls.ConnectionPool(host=host,
+        return cls.ConnectionPool(Connection,
+                                  host=host,
                                   port=port,
                                   database=database,
                                   path=path)

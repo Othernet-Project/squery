@@ -2,7 +2,6 @@ import contextlib
 import sys
 
 from gevent.queue import Queue
-from pyqlizator import Connection
 
 
 if sys.version_info[0] >= 3:
@@ -13,11 +12,11 @@ else:
 
 
 class ConnectionPool(object):
-    connection_cls = Connection
 
-    def __init__(self, maxsize=100, **kwargs):
+    def __init__(self, connection_cls, maxsize=100, **kwargs):
         if not isinstance(maxsize, integer_types):
             raise TypeError('Expected integer, got %r' % (maxsize, ))
+        self._connection_cls = connection_cls
         self._maxsize = maxsize
         self._pool = Queue()
         self._size = 0
@@ -29,7 +28,7 @@ class ConnectionPool(object):
         else:
             self._size += 1
             try:
-                return self._create_connection()
+                return self._connection_cls(**self._conn_params)
             except:
                 self._size -= 1
                 raise
@@ -44,9 +43,6 @@ class ConnectionPool(object):
                 conn.close()
             except Exception:
                 pass
-
-    def _create_connection(self):
-        return self.connection_cls(**self._conn_params)
 
     @contextlib.contextmanager
     def connection(self):
