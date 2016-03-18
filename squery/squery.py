@@ -23,6 +23,7 @@ SLASH = re.compile(r'\\')
 
 class Database(object):
     migrate = staticmethod(migrate)
+    _error_handlers = []
 
     def __init__(self, backend, debug=False):
         self._backend = backend
@@ -45,32 +46,51 @@ class Database(object):
             return func(self, query, *args, **kwargs)
         return wrapper
 
+    def guard(func):
+        @functools.wraps(func)
+        def wrapper(self, *args, **kwargs):
+            try:
+                return func(self, *args, **kwargs)
+            except Exception as exc:
+                for fn in self._error_handlers:
+                    fn(exc)
+                raise
+        return wrapper
+
+    @guard
     @serialize_query
     def execute(self, query, *params):
         return self._backend.execute(query, *params)
 
+    @guard
     @serialize_query
     def executemany(self, sql, seq_of_params):
         return self._backend.executemany(sql, seq_of_params)
 
+    @guard
     def executescript(self, sql):
         return self._backend.executescript(sql)
 
+    @guard
     @serialize_query
     def fetchone(self, sql, *params):
         return self._backend.fetchone(sql, *params)
 
+    @guard
     @serialize_query
     def fetchall(self, sql, *params):
         return self._backend.fetchall(sql, *params)
 
+    @guard
     @serialize_query
     def fetchiter(self, sql, *params):
         return self._backend.fetchiter(sql, *params)
 
+    @guard
     def transaction(self, *args, **kwargs):
         return self._backend.transaction(*args, **kwargs)
 
+    @guard
     def close(self):
         self._backend.close()
 
@@ -85,8 +105,13 @@ class Database(object):
         backend_cls = cls.get_backend_class(backend)
         return cls(backend_cls(*args, **kwargs), debug=debug)
 
+    @guard
     def recreate(self):
         self._backend.recreate()
+
+    @classmethod
+    def on_error(cls, callback):
+        cls._on_error.append(callback)
 
 
 class DatabaseContainer(dict):
