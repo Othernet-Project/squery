@@ -152,7 +152,7 @@ def set_version(db, major_version, minor_version):
     :param minor_version:  integer minor version of migration
     """
     version = pack_version(major_version, minor_version)
-    db.execute(SET_VERSION_SQL(version))
+    db.execute(SET_VERSION_SQL(version).serialize())
 
 
 def run_migration(major_version, minor_version, db, mod, conf={}):
@@ -164,9 +164,9 @@ def run_migration(major_version, minor_version, db, mod, conf={}):
     :param path:          path of the migration script
     :param conf:          application configuration (if any)
     """
-    with db.transaction():
-        mod.up(db, conf)
-        set_version(db, major_version, minor_version)
+    with db.transaction() as trans:
+        mod.up(trans, conf)
+        set_version(trans, major_version, minor_version)
 
 
 def migrate(db, package, conf={}):
