@@ -9,6 +9,7 @@ file that comes with the source code, or http://www.gnu.org/licenses/gpl.txt.
 from __future__ import print_function
 
 import calendar
+import contextlib
 import datetime
 import logging
 
@@ -58,42 +59,36 @@ class Backend(object):
 
     def __init__(self, **kwargs):
         self._conn_params = kwargs
-        self._pool = self.create_pool(**self._conn_params)
+        self._conn = Connection(**self._conn_params)
 
     def execute(self, sql, *params):
-        return self._pool.execute(sql, *params)
+        return list(self._conn.execute(sql, *params))
 
     def executemany(self, sql, seq_of_params):
-        return [self._pool.execute(sql, params) for params in seq_of_params]
+        return [list(self._conn.execute(sql, params))
+                for params in seq_of_params]
 
     def executescript(self, sql):
-        return self._pool.execute(sql)
+        return list(self._conn.execute(sql))
 
     def fetchone(self, sql, *parameters):
-        for item in self._pool.fetch(sql, *parameters):
+        for item in self._conn.fetch(sql, *parameters):
             return item  # returns first item received and ignores rest
 
     def fetchall(self, sql, *parameters):
-        return list(self._pool.fetch(sql, *parameters))
+        return list(self._conn.fetch(sql, *parameters))
 
     def fetchiter(self, sql, *parameters):
-        return self._pool.fetch(sql, *parameters)
+        return self._conn.fetch(sql, *parameters)
 
+    @contextlib.contextmanager
     def transaction(self, *args, **kwargs):
-        return self._pool.connection()
+        yield self._conn
 
     def close(self):
-        self._pool.closeall()
-
-    @classmethod
-    def create_pool(cls, host, port, database, path):
-        return cls.ConnectionPool(host=host,
-                                  port=port,
-                                  database=database,
-                                  path=path)
+        self._conn.close()
 
     def recreate(self):
-        with self._pool.connection() as conn:
-            conn.drop_database()
+        self._conn.drop_database()
         self.close()
-        self._pool = self.create_pool(**self._conn_params)
+        self._conn = Connection(**self._conn_params)
