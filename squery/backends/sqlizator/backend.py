@@ -9,6 +9,7 @@ file that comes with the source code, or http://www.gnu.org/licenses/gpl.txt.
 from __future__ import print_function
 
 import calendar
+import contextlib
 import datetime
 import logging
 
@@ -60,27 +61,40 @@ class Backend(object):
         self._conn_params = kwargs
         self._pool = self.create_pool(**self._conn_params)
 
-    def execute(self, sql, *params):
-        return self._pool.execute(sql, *params)
+    def execute(self, sql, *parameters):
+        with self._pool.connection() as conn:
+            return conn.execute(sql, *parameters)
 
     def executemany(self, sql, seq_of_params):
-        return [self._pool.execute(sql, params) for params in seq_of_params]
+        with self._pool.connection() as conn:
+            return conn.executemany(sql, seq_of_params)
 
     def executescript(self, sql):
-        return self._pool.execute(sql)
+        with self._pool.connection() as conn:
+            return conn.executescript(sql)
 
     def fetchone(self, sql, *parameters):
-        for item in self._pool.fetch(sql, *parameters):
-            return item  # returns first item received and ignores rest
+        with self._pool.connection() as conn:
+            return conn.fetchone(sql, *parameters)
 
     def fetchall(self, sql, *parameters):
-        return list(self._pool.fetch(sql, *parameters))
+        with self._pool.connection() as conn:
+            return conn.fetchall(sql, *parameters)
 
     def fetchiter(self, sql, *parameters):
-        return self._pool.fetch(sql, *parameters)
+        with self._pool.connection() as conn:
+            return conn.fetchiter(sql, *parameters)
 
-    def transaction(self, *args, **kwargs):
-        return self._pool.connection()
+    @contextlib.contextmanager
+    def transaction(self):
+        with self._pool.connection() as conn:
+            conn.execute('BEGIN;')
+            try:
+                yield conn
+            except Exception:
+                conn.execute('ROLLBACK;')
+            else:
+                conn.execute('COMMIT;')
 
     def close(self):
         self._pool.closeall()
