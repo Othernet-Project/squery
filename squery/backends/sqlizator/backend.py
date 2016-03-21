@@ -99,6 +99,7 @@ class Backend(object):
                 yield cursor
             except Exception:
                 cursor.execute('ROLLBACK;')
+                raise
             else:
                 cursor.execute('COMMIT;')
 
