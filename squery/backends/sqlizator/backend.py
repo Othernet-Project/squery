@@ -23,6 +23,7 @@ from .pool import ConnectionPool
 
 
 SQLITE_DATE_TYPES = ('date', 'datetime', 'timestamp')
+DEFAULT_OPTIONS = {'journal_mode': 'WAL', 'foreign_keys': 'ON'}
 
 
 def from_utc_timestamp(timestamp):
@@ -64,6 +65,7 @@ class Backend(object):
 
     def __init__(self, **kwargs):
         self._conn_params = kwargs
+        self._conn_params.update(DEFAULT_OPTIONS)
         self._pool = self.create_pool(**self._conn_params)
 
     def execute(self, sql, *parameters):
@@ -107,12 +109,13 @@ class Backend(object):
         self._pool.closeall()
 
     @classmethod
-    def create_pool(cls, host, port, database, path, **kwargs):
+    def create_pool(cls, host, port, database, path, **options):
         return cls.ConnectionPool(pyqlizator.Connection,
                                   host=host,
                                   port=port,
                                   database=database,
-                                  path=path)
+                                  path=path,
+                                  **options)
 
     def recreate(self):
         with self._pool.connection() as conn:
