@@ -28,8 +28,9 @@ DEFAULT_OPTIONS = {'journal_mode': 'WAL', 'foreign_keys': 'ON'}
 
 def from_utc_timestamp(timestamp):
     """Converts the passed-in unix UTC timestamp into a datetime object."""
-    dt = datetime.datetime.utcfromtimestamp(float(timestamp))
-    return dt.replace(tzinfo=utc)
+    if timestamp:
+        dt = datetime.datetime.utcfromtimestamp(float(timestamp))
+        return dt.replace(tzinfo=utc)
 
 
 def to_utc_timestamp(dt):
