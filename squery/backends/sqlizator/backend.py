@@ -106,7 +106,7 @@ class Backend(object):
         self._pool.closeall()
 
     @classmethod
-    def create_pool(cls, host, port, database, path):
+    def create_pool(cls, host, port, database, path, **kwargs):
         return cls.ConnectionPool(pyqlizator.Connection,
                                   host=host,
                                   port=port,
