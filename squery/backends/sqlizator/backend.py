@@ -9,6 +9,7 @@ file that comes with the source code, or http://www.gnu.org/licenses/gpl.txt.
 from __future__ import print_function
 
 import calendar
+import functools
 import contextlib
 import datetime
 import logging
@@ -75,29 +76,46 @@ class Backend(object):
         self._conn_params.update(DEFAULT_OPTIONS)
         self._pool = self.create_pool(**self._conn_params)
 
-    def execute(self, sql, *parameters):
-        with self._pool.connection() as conn:
-            return conn.cursor().execute(sql, *parameters)
+    def pooled(func):
+        @functools.wraps(func)
+        def wrapper(self, *args, **kwargs):
+            cursor = kwargs.pop('cursor', None)
+            if cursor:
+                return func(self, cursor=cursor, *args, **kwargs)
+            else:
+                with self._pool.connection() as conn:
+                    return func(self, cursor=conn.cursor(), *args, **kwargs)
+        return wrapper
 
-    def executemany(self, sql, seq_of_params):
-        with self._pool.connection() as conn:
-            return conn.cursor().executemany(sql, seq_of_params)
+    @pooled
+    def execute(self, sql, *parameters, **kwargs):
+        cursor = kwargs.pop('cursor')
+        return cursor.execute(sql, *parameters, **kwargs)
 
-    def executescript(self, sql):
-        with self._pool.connection() as conn:
-            return conn.cursor().executescript(sql)
+    @pooled
+    def executemany(self, sql, seq_of_params, **kwargs):
+        cursor = kwargs.pop('cursor')
+        return cursor.executemany(sql, seq_of_params, **kwargs)
 
-    def fetchone(self, sql, *parameters):
-        with self._pool.connection() as conn:
-            return conn.cursor().fetchone(sql, *parameters)
+    @pooled
+    def executescript(self, sql, **kwargs):
+        cursor = kwargs.pop('cursor')
+        return cursor.executescript(sql, **kwargs)
 
-    def fetchall(self, sql, *parameters):
-        with self._pool.connection() as conn:
-            return conn.cursor().fetchall(sql, *parameters)
+    @pooled
+    def fetchone(self, sql, *parameters, **kwargs):
+        cursor = kwargs.pop('cursor')
+        return cursor.fetchone(sql, *parameters, **kwargs)
 
-    def fetchiter(self, sql, *parameters):
-        with self._pool.connection() as conn:
-            return conn.cursor().fetchiter(sql, *parameters)
+    @pooled
+    def fetchall(self, sql, *parameters, **kwargs):
+        cursor = kwargs.pop('cursor')
+        return cursor.fetchall(sql, *parameters, **kwargs)
+
+    @pooled
+    def fetchiter(self, sql, *parameters, **kwargs):
+        cursor = kwargs.pop('cursor')
+        return cursor.fetchiter(sql, *parameters, **kwargs)
 
     @contextlib.contextmanager
     def transaction(self):
