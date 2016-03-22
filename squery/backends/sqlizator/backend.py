@@ -44,13 +44,18 @@ def to_utc_timestamp(dt):
     return calendar.timegm(dt.timetuple())
 
 
+def from_text(text):
+    if text:
+        return to_unicode(text)
+    return text
+
 pyqlizator.to_primitive_converter(datetime.datetime, to_utc_timestamp)
 for date_type in SQLITE_DATE_TYPES:
     pyqlizator.from_primitive_converter(date_type, from_utc_timestamp)
 
 
 for text_type in SQLITE_TEXT_TYPES:
-    pyqlizator.from_primitive_converter(text_type, to_unicode)
+    pyqlizator.from_primitive_converter(text_type, from_text)
 
 
 class Backend(object):
