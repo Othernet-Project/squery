@@ -59,32 +59,32 @@ class Database(object):
 
     @guard
     @serialize_query
-    def execute(self, query, *params):
-        return self._backend.execute(query, *params)
+    def execute(self, query, *params, **kwargs):
+        return self._backend.execute(query, *params, **kwargs)
 
     @guard
     @serialize_query
-    def executemany(self, sql, seq_of_params):
-        return self._backend.executemany(sql, seq_of_params)
+    def executemany(self, sql, seq_of_params, **kwargs):
+        return self._backend.executemany(sql, seq_of_params, **kwargs)
 
     @guard
-    def executescript(self, sql):
-        return self._backend.executescript(sql)
-
-    @guard
-    @serialize_query
-    def fetchone(self, sql, *params):
-        return self._backend.fetchone(sql, *params)
+    def executescript(self, sql, **kwargs):
+        return self._backend.executescript(sql, **kwargs)
 
     @guard
     @serialize_query
-    def fetchall(self, sql, *params):
-        return self._backend.fetchall(sql, *params)
+    def fetchone(self, sql, *params, **kwargs):
+        return self._backend.fetchone(sql, *params, **kwargs)
 
     @guard
     @serialize_query
-    def fetchiter(self, sql, *params):
-        return self._backend.fetchiter(sql, *params)
+    def fetchall(self, sql, *params, **kwargs):
+        return self._backend.fetchall(sql, *params, **kwargs)
+
+    @guard
+    @serialize_query
+    def fetchiter(self, sql, *params, **kwargs):
+        return self._backend.fetchiter(sql, *params, **kwargs)
 
     @guard
     def transaction(self, *args, **kwargs):
@@ -111,7 +111,7 @@ class Database(object):
 
     @classmethod
     def on_error(cls, callback):
-        cls._on_error.append(callback)
+        cls._error_handlers.append(callback)
 
 
 class DatabaseContainer(dict):
