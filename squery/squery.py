@@ -111,7 +111,7 @@ class Database(object):
 
     @classmethod
     def on_error(cls, callback):
-        cls._on_error.append(callback)
+        cls._error_handlers.append(callback)
 
 
 class DatabaseContainer(dict):
